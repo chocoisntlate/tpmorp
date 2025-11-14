@@ -1,0 +1,2 @@
+fastapi>=0.121.2
+langchain-ollama>=0.1.0
