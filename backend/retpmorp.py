@@ -111,7 +111,7 @@ def invert_text(
     
     # Call LLM for semantic inversion
     llm = OllamaLLM(model=model)
-    inverted = llm.invoke(prompt, system=SYSTEM_PROMPT)
+    inverted = llm.invoke(prompt, system=SYSTEM_PROMP_v2)
     
     # Apply stochastic transformations
     if random_word_reversal > 0:
