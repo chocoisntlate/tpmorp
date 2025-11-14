@@ -9,7 +9,7 @@ export default function App() {
     {
       role: "assistant",
       content:
-        "Hi, I’m OppositeGPT. Feed me a thought and I’ll flip it on its head.",
+        "Feel free to ask questions! :)",
     },
   ]);
   const [input, setInput] = useState("");
