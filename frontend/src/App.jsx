@@ -59,7 +59,7 @@ export default function App() {
       <header>
         <div>
           <p className="app-name">OppositeGPT</p>
-          <span className="app-subtitle">FastAPI · React</span>
+          <span className="app-subtitle">Serious answers only</span>
         </div>
         <button
           className="reset-btn"
