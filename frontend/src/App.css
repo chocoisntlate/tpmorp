@@ -1,42 +1,170 @@
+/* frontend/src/App.css */
+:root {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #e9eef9;
+  background-color: #0b111b;
+}
+
+body,
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  height: 100vh;
+  margin: 0;
+  background: radial-gradient(circle at top, #1b2a4b, #05070d 70%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.chat-shell {
+  width: min(900px, 95vw);
+  height: min(720px, 90vh);
+  background: rgba(6, 10, 22, 0.9);
+  border: 1px solid rgba(129, 169, 255, 0.25);
+  border-radius: 28px;
+  display: flex;
+  flex-direction: column;
+  padding: 1.75rem;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(18px);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-name {
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  font-size: 0.75rem;
+  color: #7dd7ff;
+  margin: 0;
+}
+
+.app-subtitle {
+  color: #9cb8ff;
+  font-size: 0.85rem;
+}
+
+.reset-btn {
+  border: 1px solid rgba(125, 215, 255, 0.4);
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  background: transparent;
+  color: #7dd7ff;
+  cursor: pointer;
+}
+
+.chat-thread {
+  flex: 1;
+  overflow-y: auto;
+  margin: 1.5rem 0;
+  padding-right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bubble {
+  display: flex;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: 20px;
+  background: rgba(17, 24, 39, 0.8);
+}
+
+.bubble.user {
+  background: rgba(60, 99, 255, 0.18);
+  margin-left: auto;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(125, 215, 255, 0.15);
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: #7dd7ff;
+}
+
+.bubble.user .avatar {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fdfefe;
+}
+
+.bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.composer {
+  border: 1px solid rgba(129, 169, 255, 0.25);
+  border-radius: 20px;
+  padding: 0.75rem 1rem;
+  background: rgba(9, 15, 29, 0.85);
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.composer textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #f5f7ff;
+  resize: none;
+  font-size: 1rem;
+}
+
+.composer button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.6rem;
+  background: linear-gradient(120deg, #6df2ff, #7d8bff);
+  color: #0c1120;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.composer button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bubble.typing .dots {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.bubble.typing .dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7dd7ff;
+  animation: blink 1s infinite ease-in-out;
+}
+
+.bubble.typing .dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.bubble.typing .dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%,
+  80% {
+    opacity: 0.2;
+    transform: translateY(0);
   }
-  to {
-    transform: rotate(360deg);
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
   }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }
