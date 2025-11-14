@@ -1,23 +1,60 @@
-// frontend/src/App.jsx
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const PROMPTER_WORD = "prompter";
+const RETPMORP_WORD = "retpmorp";
+const RETPMORP_LETTERS = RETPMORP_WORD.split("").map((letter, index) => ({
+  from: PROMPTER_WORD[index] ?? "",
+  to: letter,
+}));
+
+function RetpmorpWord({
+  as: Element = "span",
+  className = "",
+  label = RETPMORP_WORD,
+  ...restProps
+}) {
+  const classNames = ["retpmorp-word", className].filter(Boolean).join(" ");
+  return (
+    <Element className={classNames} {...restProps}>
+      <span className="sr-only">{label}</span>
+      {RETPMORP_LETTERS.map(({ from, to }, index) => (
+        <span
+          aria-hidden="true"
+          key={`${to}-${index}`}
+          className="retpmorp-letter"
+          data-from={from}
+          data-to={to}
+          style={{ "--retpmorp-delay": `${index * 80}ms` }}
+        >
+          {to}
+        </span>
+      ))}
+    </Element>
+  );
+}
 
 export default function App() {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Feel free to ask questions! :)",
-    },
-  ]);
+  const buildIntroMessage = () => ({
+    role: "assistant",
+    content: (
+      <>
+        Hi, I’m <RetpmorpWord />. Feed me a thought and I’ll flip it on its head.
+      </>
+    ),
+  });
+
+  const [messages, setMessages] = useState(() => [buildIntroMessage()]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const chatRef = useRef(null);
 
   useEffect(() => {
-    chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: "smooth" });
+    chatRef.current?.scrollTo({
+      top: chatRef.current.scrollHeight,
+      behavior: "smooth",
+    });
   }, [messages, loading]);
 
   const sendMessage = async (e) => {
@@ -58,21 +95,14 @@ export default function App() {
     <div className="chat-shell">
       <header>
         <div>
-          <p className="app-name">OppositeGPT</p>
-          <span className="app-subtitle">Serious answers only</span>
+          <p className="app-name">
+            <RetpmorpWord className="retpmorp-word--title" />
+          </p>
+          <span className="app-subtitle">
+            Serious answers only · Professional Ragebaiter
+          </span>
         </div>
-        <button
-          className="reset-btn"
-          onClick={() =>
-            setMessages([
-              {
-                role: "assistant",
-                content:
-                  "Hi, I’m OppositeGPT. Feed me a thought and I’ll flip it on its head.",
-              },
-            ])
-          }
-        >
+        <button className="reset-btn" onClick={() => setMessages([buildIntroMessage()])}>
           Clear chat
         </button>
       </header>
