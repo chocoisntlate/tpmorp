@@ -1,8 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Dict
 import uvicorn
+import json
+from datetime import datetime
 
 from retpmorp import invert_text
 
@@ -57,6 +59,96 @@ async def invert_endpoint(request: InvertRequest) -> InvertResponse:
 async def health_check():
     """Health check endpoint."""
     return {"status": "ok"}
+
+
+# Simple in-memory chat history storage
+chat_histories: Dict[str, List[Dict]] = {}
+
+
+@app.websocket("/ws/chat")
+async def websocket_chat(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time chat.
+
+    Expected message format:
+    {
+        "message": "user message",
+        "session_id": "optional-session-id",
+        "model": "llama2"
+    }
+    """
+    await websocket.accept()
+    session_id = None
+
+    try:
+        while True:
+            # Receive message from client
+            data = await websocket.receive_text()
+
+            try:
+                message_data = json.loads(data)
+                user_message = message_data.get("message", "")
+                session_id = message_data.get("session_id", "default")
+                model = message_data.get("model", "llama2")
+
+                # Initialize chat history for new sessions
+                if session_id not in chat_histories:
+                    chat_histories[session_id] = []
+
+                # Add user message to history
+                chat_histories[session_id].append({
+                    "role": "user",
+                    "content": user_message,
+                    "timestamp": datetime.now().isoformat()
+                })
+
+                # Send acknowledgment
+                await websocket.send_json({
+                    "type": "user_message_received",
+                    "message": user_message,
+                    "session_id": session_id
+                })
+
+                # Process with LLM (using invert_text for demo)
+                try:
+                    ai_response = invert_text(
+                        prompt=user_message,
+                        model=model
+                    )
+
+                    # Add AI response to history
+                    chat_histories[session_id].append({
+                        "role": "assistant",
+                        "content": ai_response,
+                        "timestamp": datetime.now().isoformat()
+                    })
+
+                    # Send AI response
+                    await websocket.send_json({
+                        "type": "ai_response",
+                        "message": ai_response,
+                        "session_id": session_id,
+                        "history_length": len(chat_histories[session_id])
+                    })
+
+                except Exception as llm_error:
+                    await websocket.send_json({
+                        "type": "error",
+                        "error": f"LLM error: {str(llm_error)}"
+                    })
+
+            except json.JSONDecodeError:
+                await websocket.send_json({
+                    "type": "error",
+                    "error": "Invalid JSON format"
+                })
+
+    except WebSocketDisconnect:
+        if session_id:
+            print(f"Client disconnected. Session: {session_id}")
+    except Exception as e:
+        print(f"WebSocket error: {str(e)}")
+        await websocket.close()
 
 
 if __name__ == "__main__":
