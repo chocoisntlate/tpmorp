@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
-const API_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:8000/ws/chat";
+const SESSION_ID = "session-" + Math.random().toString(36).substr(2, 9);
 const PROMPTER_WORD = "prompter";
 const RETPMORP_WORD = "retpmorp";
 const RETPMORP_LETTERS = RETPMORP_WORD.split("").map((letter, index) => ({
@@ -16,7 +17,6 @@ function RetpmorpWord({
   ...restProps
 }) {
   const classNames = ["retpmorp-word", className].filter(Boolean).join(" ");
-
   return (
     <Element className={classNames} {...restProps}>
       <span className="sr-only">{label}</span>
@@ -41,7 +41,7 @@ export default function App() {
     role: "assistant",
     content: (
       <>
-        Hi, I’m <RetpmorpWord />. Feed me a thought and I’ll flip it on its head.
+        Hi, I'm <RetpmorpWord />. Feed me a thought and I'll flip it on its head.
       </>
     ),
   });
@@ -49,7 +49,9 @@ export default function App() {
   const [messages, setMessages] = useState(() => [buildIntroMessage()]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [connected, setConnected] = useState(false);
   const chatRef = useRef(null);
+  const wsRef = useRef(null);
 
   useEffect(() => {
     chatRef.current?.scrollTo({
@@ -58,9 +60,61 @@ export default function App() {
     });
   }, [messages, loading]);
 
+  // WebSocket connection
+  useEffect(() => {
+    const ws = new WebSocket(WS_URL);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log("WebSocket connected");
+      setConnected(true);
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log("WebSocket message:", data);
+
+      if (data.type === "ai_response") {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: data.message },
+        ]);
+        setLoading(false);
+      } else if (data.type === "error") {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: `Error: ${data.error}` },
+        ]);
+        setLoading(false);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "WebSocket connection error. Please check the server.",
+        },
+      ]);
+      setConnected(false);
+      setLoading(false);
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket disconnected");
+      setConnected(false);
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
+
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading || !connected) return;
 
     const userText = input.trim();
     setInput("");
@@ -68,26 +122,22 @@ export default function App() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/invert`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: userText }),
-      });
-      const data = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.result ?? "…" },
-      ]);
+      wsRef.current.send(
+        JSON.stringify({
+          message: userText,
+          session_id: SESSION_ID,
+          model: "llama2",
+        })
+      );
     } catch (err) {
+      console.error("Send error:", err);
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content:
-            "I couldn’t reach the inversion backend. Please check the FastAPI server.",
+          content: "Failed to send message. Please check the connection.",
         },
       ]);
-    } finally {
       setLoading(false);
     }
   };
@@ -100,7 +150,7 @@ export default function App() {
             <RetpmorpWord className="retpmorp-word--title" />
           </p>
           <span className="app-subtitle">
-            Serious answers only · Professional Ragebaiter
+            FastAPI · React · WebSocket {connected ? "✓" : "✗"}
           </span>
         </div>
         <button className="reset-btn" onClick={() => setMessages([buildIntroMessage()])}>
@@ -132,9 +182,15 @@ export default function App() {
           rows={1}
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              sendMessage(e);
+            }
+          }}
           placeholder="Send a message..."
         />
-        <button type="submit" disabled={!input.trim() || loading}>
+        <button type="submit" disabled={!input.trim() || loading || !connected}>
           Send
         </button>
       </form>
