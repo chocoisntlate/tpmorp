@@ -34,24 +34,30 @@ body,
 
 .retpmorp-word {
   --retpmorp-start-delay: 2200ms;
+  --retpmorp-letter-width: 0.88em;
+  --retpmorp-letter-height: 1.35em;
   display: inline-flex;
-  gap: 0.04em;
-  letter-spacing: 0.08em;
+  gap: 0.08em;
+  letter-spacing: 0;
   text-transform: uppercase;
-  perspective: 500px;
+  perspective: 900px;
 }
 
 .retpmorp-word--title {
   font-size: 1rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
 }
 
 .retpmorp-letter {
   position: relative;
-  display: inline-block;
-  min-width: 0.7ch;
+  display: inline-flex;
+  width: var(--retpmorp-letter-width);
+  height: var(--retpmorp-letter-height);
+  align-items: center;
+  justify-content: center;
   color: transparent;
   font-weight: 600;
+  transform-style: preserve-3d;
 }
 
 .retpmorp-letter::before,
@@ -62,6 +68,7 @@ body,
   align-items: center;
   justify-content: center;
   width: 100%;
+  line-height: 1;
   backface-visibility: hidden;
   transform-origin: center;
 }
@@ -69,6 +76,7 @@ body,
 .retpmorp-letter::before {
   content: attr(data-from);
   color: rgba(255, 255, 255, 0.28);
+  transform: rotateX(0deg);
   animation: retpmorp-flip-out
       900ms
       calc(var(--retpmorp-start-delay, 0ms) + var(--retpmorp-delay, 0ms))
@@ -79,7 +87,7 @@ body,
 .retpmorp-letter::after {
   content: attr(data-to);
   color: #9ae3ff;
-  transform: rotateX(-90deg) translateZ(6px);
+  transform: rotateX(-90deg);
   animation: retpmorp-flip-in
       900ms
       calc(var(--retpmorp-start-delay, 0ms) + var(--retpmorp-delay, 0ms))
@@ -283,29 +291,30 @@ header {
 @keyframes retpmorp-flip-out {
   0% {
     opacity: 1;
-    transform: rotateX(0deg) translateZ(0);
+    transform: rotateX(0deg);
   }
   55% {
     opacity: 0;
-    transform: rotateX(90deg) translateZ(6px);
+    transform: rotateX(90deg);
   }
   100% {
     opacity: 0;
-    transform: rotateX(90deg) translateZ(6px);
+    transform: rotateX(90deg);
   }
 }
 
 @keyframes retpmorp-flip-in {
   0% {
     opacity: 0;
-    transform: rotateX(-90deg) translateZ(6px);
+    transform: rotateX(-90deg);
   }
   45% {
     opacity: 0;
-    transform: rotateX(-90deg) translateZ(6px);
+    transform: rotateX(-90deg);
   }
   100% {
     opacity: 1;
-    transform: rotateX(0) translateZ(0);
+    transform: rotateX(0);
   }
+
 }
